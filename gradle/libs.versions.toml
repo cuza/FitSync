@@ -11,6 +11,7 @@ room = "2.6.1"
 work = "2.9.1"
 healthConnect = "1.1.0-alpha11"
 retrofit = "2.11.0"
+moshi = "1.15.1"
 okhttp = "4.12.0"
 securityCrypto = "1.1.0-alpha06"
 datastore = "1.1.1"
@@ -47,6 +48,7 @@ org-jetbrains-kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", na
 org-jetbrains-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

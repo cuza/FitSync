@@ -82,6 +82,7 @@ fun AppNav(
                 HomeScreen(
                     uiState = uiState,
                     statusLabel = viewModel::statusLabel,
+                    exerciseTypeLabel = viewModel::exerciseTypeLabel,
                     onRequestStravaLogin = viewModel::stravaLoginIntent,
                     onLogoutStrava = viewModel::logoutStrava,
                     onPermissionResult = viewModel::onPermissionResult,

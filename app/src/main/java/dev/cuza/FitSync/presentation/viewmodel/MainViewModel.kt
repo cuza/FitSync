@@ -22,6 +22,7 @@ data class MainUiState(
     val settings: UserSettings = UserSettings(),
     val knownSessionTypes: List<Int> = emptyList(),
     val requiredPermissions: Set<String> = emptySet(),
+    val permissionRequestSet: Set<String> = emptySet(),
     val healthSdkStatus: Int = HealthConnectClient.SDK_UNAVAILABLE,
     val hasHealthPermissions: Boolean = false,
     val stravaLoggedIn: Boolean = false,
@@ -41,6 +42,7 @@ class MainViewModel(
         _uiState.update {
             it.copy(
                 requiredPermissions = syncRepository.healthConnectRequiredPermissions(),
+                permissionRequestSet = syncRepository.healthConnectRequestedPermissions(),
                 knownSessionTypes = syncRepository.knownSessionTypes(),
                 healthSdkStatus = syncRepository.healthConnectSdkStatus(),
             )
@@ -125,7 +127,12 @@ class MainViewModel(
 
     fun onPermissionResult(granted: Set<String>) {
         val hasAll = granted.containsAll(_uiState.value.requiredPermissions)
-        _uiState.update { it.copy(hasHealthPermissions = hasAll) }
+        _uiState.update {
+            it.copy(
+                hasHealthPermissions = hasAll,
+                message = if (hasAll) it.message else "Health Connect permissions not granted. Open Health Connect settings and allow access.",
+            )
+        }
         if (hasAll) {
             scanSessions()
         }

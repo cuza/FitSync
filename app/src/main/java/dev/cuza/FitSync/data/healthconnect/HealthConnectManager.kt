@@ -30,6 +30,11 @@ class HealthConnectManager(private val context: Context) {
     val requiredPermissions: Set<String> = setOf(
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
+    )
+
+    val requestedPermissions: Set<String> = setOf(
+        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+        HealthPermission.getReadPermission(HeartRateRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getReadPermission(SpeedRecord::class),
         HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
@@ -63,27 +68,27 @@ class HealthConnectManager(private val context: Context) {
         val start = session.startTime
         val end = session.endTime
 
-        val heartRateRecords = readAll(
+        val heartRateRecords = readAllOrEmpty(
             recordType = HeartRateRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
-        val distanceRecords = readAll(
+        val distanceRecords = readAllOrEmpty(
             recordType = DistanceRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
-        val speedRecords = readAll(
+        val speedRecords = readAllOrEmpty(
             recordType = SpeedRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
-        val totalCaloriesRecords = readAll(
+        val totalCaloriesRecords = readAllOrEmpty(
             recordType = TotalCaloriesBurnedRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
-        val activeCaloriesRecords = readAll(
+        val activeCaloriesRecords = readAllOrEmpty(
             recordType = ActiveCaloriesBurnedRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
-        val stepsRecords = readAll(
+        val stepsRecords = readAllOrEmpty(
             recordType = StepsRecord::class,
             timeRangeFilter = TimeRangeFilter.between(start, end),
         )
@@ -133,7 +138,12 @@ class HealthConnectManager(private val context: Context) {
         return WorkoutSession(
             healthConnectSessionId = session.metadata.id.takeUnless { it.isNullOrBlank() }
                 ?: fallbackSessionId(session),
-            title = session.title?.takeUnless { it.isBlank() } ?: "Workout",
+            title = session.title
+                ?.takeUnless { it.isBlank() }
+                ?: session.notes
+                    ?.toString()
+                    ?.takeUnless { it.isBlank() }
+                ?: "Workout",
             startTime = start,
             endTime = end,
             exerciseType = session.exerciseType,
@@ -209,6 +219,22 @@ class HealthConnectManager(private val context: Context) {
 
         Log.d(TAG, "Fetched ${all.size} ${recordType.simpleName} records")
         return all
+    }
+
+    private suspend fun <T : Record> readAllOrEmpty(
+        recordType: KClass<T>,
+        timeRangeFilter: TimeRangeFilter,
+    ): List<T> {
+        return runCatching {
+            readAll(recordType = recordType, timeRangeFilter = timeRangeFilter)
+        }.getOrElse { error ->
+            if (error is SecurityException) {
+                Log.w(TAG, "Missing permission for ${recordType.simpleName}; continuing without it")
+                emptyList()
+            } else {
+                throw error
+            }
+        }
     }
 
     companion object {

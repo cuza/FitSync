@@ -54,7 +54,11 @@ class SyncRepository(
         val entities = workouts.map { workout ->
             val hash = hashCalculator.hash(workout)
             val existing = syncSessionDao.bySessionId(workout.healthConnectSessionId)
-            val mappedType = exerciseTypeMapper.resolve(workout.exerciseType, settings.overrides)
+            val mappedType = exerciseTypeMapper.resolve(
+                exerciseType = workout.exerciseType,
+                overrides = settings.overrides,
+                sessionTitle = workout.title,
+            )
             buildScannedEntity(
                 workout = workout,
                 mappedType = mappedType,
@@ -116,7 +120,11 @@ class SyncRepository(
             }
 
             val hash = hashCalculator.hash(session)
-            val mappedType = exerciseTypeMapper.resolve(session.exerciseType, settings.overrides)
+            val mappedType = exerciseTypeMapper.resolve(
+                exerciseType = session.exerciseType,
+                overrides = settings.overrides,
+                sessionTitle = session.title,
+            )
             val externalId = externalId(session.healthConnectSessionId, hash)
 
             val tcxFile = runCatching {
@@ -178,6 +186,8 @@ class SyncRepository(
     }
 
     fun healthConnectRequiredPermissions(): Set<String> = healthConnectManager.requiredPermissions
+
+    fun healthConnectRequestedPermissions(): Set<String> = healthConnectManager.requestedPermissions
 
     fun healthConnectSdkStatus(): Int = healthConnectManager.sdkStatus()
 

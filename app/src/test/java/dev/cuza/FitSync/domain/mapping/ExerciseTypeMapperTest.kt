@@ -51,6 +51,59 @@ class ExerciseTypeMapperTest {
     }
 
     @Test
+    fun `bike or cycling exercise constants map to ride when available`() {
+        val bikeTypeValues = ExerciseSessionRecord::class.java.fields
+            .filter { it.name.startsWith("EXERCISE_TYPE_") && it.type == Int::class.javaPrimitiveType }
+            .filter { field ->
+                field.name.contains("BIKING") ||
+                    field.name.contains("CYCLING") ||
+                    field.name.contains("SPINNING")
+            }
+            .mapNotNull { field -> runCatching { field.getInt(null) }.getOrNull() }
+            .distinct()
+
+        assumeTrue("No biking/cycling constants found in this Health Connect version", bikeTypeValues.isNotEmpty())
+
+        bikeTypeValues.forEach { value ->
+            assertEquals(StravaActivityType.RIDE, mapper.resolve(value, emptyMap()))
+        }
+    }
+
+    @Test
+    fun `generic workout title with spin keywords maps to ride`() {
+        val genericType = constant("EXERCISE_TYPE_WORKOUT")
+            ?: constant("EXERCISE_TYPE_OTHER_WORKOUT")
+            ?: Int.MAX_VALUE
+
+        val resolved = mapper.resolve(
+            exerciseType = genericType,
+            overrides = emptyMap(),
+            sessionTitle = "Indoor Cycling - Peloton",
+        )
+
+        assertEquals(StravaActivityType.RIDE, resolved)
+    }
+
+    @Test
+    fun `title fallback maps virtual row and trail run`() {
+        val unknownType = Int.MAX_VALUE
+
+        val virtualRow = mapper.resolve(
+            exerciseType = unknownType,
+            overrides = emptyMap(),
+            sessionTitle = "Zwift Virtual Row",
+        )
+        val trailRun = mapper.resolve(
+            exerciseType = unknownType,
+            overrides = emptyMap(),
+            sessionTitle = "Morning Trail Run",
+        )
+
+        assertEquals(StravaActivityType.VIRTUAL_ROW, virtualRow)
+        assertEquals(StravaActivityType.TRAIL_RUN, trailRun)
+    }
+
+    @Test
     fun `known session types list is sorted and unique`() {
         val known = mapper.knownSessionTypesForSettings()
         assertTrue(known.isNotEmpty())

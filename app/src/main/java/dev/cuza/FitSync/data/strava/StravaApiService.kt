@@ -37,7 +37,8 @@ interface StravaApiService {
         @Header("Authorization") authHeader: String,
         @Part file: MultipartBody.Part,
         @Part("data_type") dataType: RequestBody,
-        @Part("activity_type") activityType: RequestBody,
+        @Part("activity_type") activityType: RequestBody?,
+        @Part("sport_type") sportType: RequestBody?,
         @Part("external_id") externalId: RequestBody,
     ): StravaUploadResponse
 

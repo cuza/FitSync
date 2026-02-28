@@ -28,7 +28,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.cuza.FitSync"
+        applicationId = "dev.cuza.fitsync"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -38,8 +38,8 @@ android {
 
         val stravaClientId = projectProp("STRAVA_CLIENT_ID")
         val stravaClientSecret = projectProp("STRAVA_CLIENT_SECRET")
-        val stravaRedirectScheme = projectProp("STRAVA_REDIRECT_SCHEME", "sh2s")
-        val stravaRedirectHost = projectProp("STRAVA_REDIRECT_HOST", "oauth")
+        val stravaRedirectScheme = projectProp("STRAVA_REDIRECT_SCHEME", "fitsync")
+        val stravaRedirectHost = projectProp("STRAVA_REDIRECT_HOST", "cuza.dev")
 
         buildConfigField("String", "STRAVA_CLIENT_ID", toBuildConfigString(stravaClientId))
         buildConfigField("String", "STRAVA_CLIENT_SECRET", toBuildConfigString(stravaClientSecret))
@@ -110,6 +110,7 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 

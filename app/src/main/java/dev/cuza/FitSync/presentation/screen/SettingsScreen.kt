@@ -99,7 +99,7 @@ fun SettingsScreen(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Default mapping: rower→Rowing, treadmill→Run, elliptical→Elliptical, spin/stationary→Ride, else Workout.",
+                text = "Default mapping uses Health Connect type names + session title hints (for example spin, trail run, virtual ride/row). Override any type below.",
                 style = MaterialTheme.typography.bodySmall,
             )
         }

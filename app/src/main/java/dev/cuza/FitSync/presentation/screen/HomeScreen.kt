@@ -2,6 +2,7 @@ package dev.cuza.FitSync.presentation.screen
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     uiState: MainUiState,
     statusLabel: (UploadStatus) -> String,
+    exerciseTypeLabel: (Int) -> String,
     onRequestStravaLogin: () -> Intent,
     onLogoutStrava: () -> Unit,
     onPermissionResult: (Set<String>) -> Unit,
@@ -121,9 +123,22 @@ fun HomeScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (uiState.healthSdkStatus == HealthConnectClient.SDK_AVAILABLE) {
                             OutlinedButton(onClick = {
-                                permissionLauncher.launch(uiState.requiredPermissions)
+                                if (uiState.permissionRequestSet.isEmpty()) {
+                                    openHealthConnectPermissions(context)
+                                } else {
+                                    runCatching {
+                                        permissionLauncher.launch(uiState.permissionRequestSet)
+                                    }.onFailure {
+                                        openHealthConnectPermissions(context)
+                                    }
+                                }
                             }) {
                                 Text("Grant Permissions")
+                            }
+                            OutlinedButton(onClick = {
+                                openHealthConnectPermissions(context)
+                            }) {
+                                Text("Open HC Settings")
                             }
                         } else {
                             OutlinedButton(
@@ -198,10 +213,27 @@ fun HomeScreen(
                     session = session,
                     statusLabel = statusLabel(session.uploadStatus),
                     dateFormatter = dateFormatter,
+                    exerciseTypeLabel = exerciseTypeLabel,
                 )
                 HorizontalDivider()
             }
         }
+    }
+}
+
+private fun openHealthConnectPermissions(context: android.content.Context) {
+    val managePermissionsIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        Intent(android.health.connect.HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).apply {
+            putExtra(Intent.EXTRA_PACKAGE_NAME, context.packageName)
+        }
+    } else {
+        Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS)
+    }
+
+    runCatching {
+        context.startActivity(managePermissionsIntent)
+    }.onFailure {
+        context.startActivity(Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS))
     }
 }
 
@@ -210,6 +242,7 @@ private fun SessionRow(
     session: SyncSessionEntity,
     statusLabel: String,
     dateFormatter: DateTimeFormatter,
+    exerciseTypeLabel: (Int) -> String,
 ) {
     Column(
         modifier = Modifier
@@ -228,6 +261,10 @@ private fun SessionRow(
         )
         Text(
             text = "Mapped type: ${session.mappedActivityType}",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            text = "Health Connect type: ${exerciseTypeLabel(session.exerciseType)} (${session.exerciseType})",
             style = MaterialTheme.typography.bodySmall,
         )
 
